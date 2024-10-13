@@ -45,8 +45,8 @@ repositories {
     mavenCentral()
 }
 
-sourceCompatibility = '13'
-targetCompatibility = '13'
+sourceCompatibility = '11'
+targetCompatibility = '11'
 archivesBaseName = 'moqui-util'
 
 dependencies {

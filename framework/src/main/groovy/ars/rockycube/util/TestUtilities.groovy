@@ -279,11 +279,27 @@ public class TestUtilities {
     public static Writer createDebugWriter(String[] debugTo)
     {
         // log and store output
-        String[] debugFilePath = setResourcePath(debugTo)
+        // 1. check if the path starts with `test-integration` or `__temp`, assume it goes to src of the project
+        // 2. if it's otherwise, treat it as standard path
+        def locals = ["test-integration", "test", "__temp"]
+        def localDebug = locals.any {debugTo[0].startsWith(it)}
+        def startsWithSlash = debugTo[0].startsWith("/")
+
+        String[] debugFilePath
+        if (localDebug) {
+            debugFilePath = setResourcePath(debugTo)
+        } else if (startsWithSlash) {
+            debugFilePath = debugTo
+        } else {
+            debugFilePath = setResourcePath(debugTo)
+        }
 
         // create parent directory
         File outputFile = FileUtils.getFile(debugFilePath)
-        if (!outputFile.parentFile.exists()) outputFile.parentFile.mkdirs()
+        if (!outputFile.parentFile.exists()) {
+            def dirCreation = outputFile.parentFile.mkdirs()
+            if (!dirCreation) throw new Exception("Cannot create output file ${debugTo.join('/')}")
+        }
 
         FileOutputStream debug = new FileOutputStream(getInputFile(debugFilePath))
         return new OutputStreamWriter(debug, StandardCharsets.UTF_8)
@@ -329,8 +345,9 @@ public class TestUtilities {
             fw.write(cb() as String)
             fw.close()
         } catch (Exception exc) {
+            exc.printStackTrace()
             // try to close the writer
-            if (fw) try {fw.close()} catch (Exception closeWriter) {}
+            if (fw) try {fw.close()} catch (Exception ignore) {}
         }
     }
 
@@ -486,10 +503,6 @@ public class TestUtilities {
      * @return
      */
     public static void storeInTempDir(Object output, String[] dir, String filePrefix, boolean clearBeforeWriting=false) {
-        // first check, if debug is turned on
-        def isDebugEnabled = Boolean.valueOf(System.getenv("DEBUG") ?: "false")
-        if (!isDebugEnabled) return
-
         // cleanup first
         if (clearBeforeWriting) deleteDir(dir)
 
@@ -500,6 +513,27 @@ public class TestUtilities {
             Gson gs = new GsonBuilder().setPrettyPrinting().create()
             return gs.toJson(output)
         })
+    }
+
+    /**
+     * Appends a subdirectory to each path in the given array of paths.
+     * @param basePaths The array of base paths.
+     * @param subDirectory The subdirectory to append.
+     * @return A new String array with the appended subdirectory.
+     */
+    public static String[] appendSubDirectory(String[] basePaths, String subDirectory) {
+        if (subDirectory == null || subDirectory.isEmpty()) {
+            return basePaths
+        }
+        return basePaths.collect { new File(it, subDirectory).getPath() } as String[]
+    }
+
+    /**
+     * Helper method to generate a string to name a file
+     * @return
+     */
+    public static String generateRandomName() {
+        return RandomStringUtils.randomAlphanumeric(6)
     }
 
     /**

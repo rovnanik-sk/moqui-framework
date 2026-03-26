@@ -238,6 +238,9 @@ public class TestUtilities {
             def proc = CollectionUtils.convertLazyMap(processedEntity as LazyMap)
             def exp = CollectionUtils.convertLazyMap(expectedValue as LazyMap)
 
+            // skip test if ignored
+            if (proc.containsKey("ignore")) if (proc["ignore"]) return
+
             if (logger) logger.info("*************** Test ${idx + 1} [START ] ***************")
             cb(proc, exp, idx)
             if (logger) logger.info("*************** Test ${idx + 1} [FINISH] ***************\n")

@@ -1,6 +1,7 @@
 package ars.rockycube.util
 
 import com.google.gson.internal.LinkedTreeMap
+import groovy.json.JsonOutput
 import org.apache.groovy.json.internal.LazyMap
 import org.codehaus.groovy.runtime.GStringImpl
 import java.util.stream.Collectors
@@ -31,6 +32,35 @@ class CollectionUtils {
 
     public static Class<?> checkClassInMap(Map whereToSearch, String searchFor) {
         return checkClassInMap(whereToSearch, (ArrayList) searchFor.split('\\.'))
+    }
+
+    /**
+     * Extract data from a provided path in JSON
+     * @param parsedJson
+     * @param path
+     * @return
+     */
+    public static Object extractJsonPath(Object parsedJson, String path, boolean returnString) {
+        def extractedData = path.tokenize('.[]').inject(parsedJson) { current, key ->
+            if (current == null) return null
+            if (key.isInteger() && current instanceof List) {
+                return current.get(key.toInteger())
+            } else if (current instanceof Map) {
+                return current.get(key)
+            }
+            return null
+        }
+
+        if (extractedData != null) {
+            if (extractedData instanceof CharSequence) {
+                return extractedData
+            } else {
+                return returnString ? JsonOutput.toJson(extractedData) : extractedData
+            }
+        } else {
+            // logger.warn("Path ${path} not found in JSON")
+            return returnString ? JsonOutput.toJson(parsedJson) : extractedData
+        }
     }
 
     /**

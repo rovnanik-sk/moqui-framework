@@ -64,6 +64,50 @@ class CollectionUtils {
     }
 
     /**
+     * Replaces data at a provided path in JSON with a new value.
+     * @param parsedJson The JSON object (Map or List) to modify.
+     * @param path The JSONPath-like string (e.g., "a.b[0].c").
+     * @param newValue The new value to set at the specified path.
+     * @return The modified JSON object.
+     */
+    public static Object replaceJsonPath(Object parsedJson, String path, Object newValue) {
+        def tokens = path.tokenize('.[]')
+        if (tokens.isEmpty()) {
+            return parsedJson // Or throw an exception for empty path
+        }
+
+        def parentTokens = tokens.take(tokens.size() - 1)
+        def lastToken = tokens.last()
+
+        def parent = parentTokens.inject(parsedJson) { current, key ->
+            if (current == null) return null
+            if (key.isInteger() && current instanceof List) {
+                return current.get(key.toInteger())
+            } else if (current instanceof Map) {
+                // if the key is integer like, be more careful
+                if (key.isInteger()) {
+                    return current.get(key.toInteger())
+                } else {
+                    return current.get(key)
+                }
+            }
+            return null
+        }
+
+        if (parent != null) {
+            if (lastToken.isInteger() && parent instanceof List) {
+                int index = lastToken.toInteger()
+                if (index >= 0 && index < parent.size()) {
+                    parent[index] = newValue
+                }
+            } else if (parent instanceof Map) {
+                parent[lastToken] = newValue
+            }
+        }
+        return parsedJson
+    }
+
+    /**
      * Search for a keyword inside a LazyMap, supports nested objects
      * @param whereToSearch
      * @param searchFor

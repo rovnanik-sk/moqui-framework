@@ -69,6 +69,7 @@ class EndpointCaller {
                 setup: [
                         procedure: proceduresList,
                         output_only_last: true,
+                        merge_all_stats: true,
                         extra: extractPycalcArgs ? ViUtilities.extractPycalcArgs(extraParams) : extraParams,
                         proc_id: processingId,
                         session_id: sessionId

@@ -528,7 +528,10 @@ public class TestUtilities {
         if (subDirectory == null || subDirectory.isEmpty()) {
             return basePaths
         }
-        return basePaths.collect { new File(it, subDirectory).getPath() } as String[]
+        return basePaths
+                .toList()
+                .collect { new File(it, subDirectory).path }
+                .toArray(new String[0])
     }
 
     /**

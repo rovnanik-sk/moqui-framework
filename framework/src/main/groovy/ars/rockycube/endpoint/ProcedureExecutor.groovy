@@ -47,4 +47,20 @@ class ProcedureExecutor {
 
         return [result: true]
     }
+
+    /**
+     * Execute a stored procedure with caller-supplied positional args.
+     * @param connectionName
+     * @param procedureName
+     * @param args positional arguments bound to the procedure's parameters in order
+     * @return
+     */
+    public static HashMap executeProcedureWithArgs(String connectionName, String procedureName, ArrayList args) {
+        ExecutionContext ec = Moqui.getExecutionContext()
+
+        def conn = ec.entity.getConnection(connectionName)
+        SqlExecutor.executeStoredProcedure(conn, logger, procedureName, args ?: [])
+
+        return [result: true]
+    }
 }

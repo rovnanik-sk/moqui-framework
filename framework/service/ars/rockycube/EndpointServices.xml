@@ -182,4 +182,21 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
     </service>
 
+    <!--EXECUTE STORED PROCEDURE - explicit args from caller -->
+    <service
+            verb="launch"
+            noun="StoredProcedureWithArgs"
+            method="launchWithArgs"
+            type="script"
+            location="classpath://service/ars/rockycube/sp/ProcHandler.groovy">
+        <in-parameters>
+            <parameter name="procedureName" type="String"/>
+            <parameter name="connectionName" type="String"/>
+            <parameter name="args" type="List"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="result" type="Map"/>
+        </out-parameters>
+    </service>
+
 </services>

@@ -24,6 +24,7 @@ import org.moqui.jcache.MCache
 
 import javax.cache.Cache
 import java.sql.Connection
+import java.sql.Timestamp
 import org.slf4j.Logger
 
 import java.text.SimpleDateFormat
@@ -103,6 +104,21 @@ class ViUtilities {
                 return LocalDate.parse(input.toString(), formatter)
             default:
                 throw new Exception("Unsupported date conversion from type ${input.getClass().simpleName}")
+        }
+    }
+
+    static Timestamp stringToTimestamp(Object input) {
+        if (!input) return null
+
+        switch (input.getClass().simpleName) {
+            case "String":
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                LocalDate localDate = LocalDate.parse(input.toString(), formatter)
+                return Timestamp.valueOf(localDate.atStartOfDay())
+            case "LocalDate":
+                return Timestamp.valueOf(((LocalDate) input).atStartOfDay())
+            default:
+                throw new Exception("Unsupported timestamp conversion from type ${input.getClass().simpleName}")
         }
     }
 

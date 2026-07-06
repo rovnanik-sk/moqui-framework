@@ -229,11 +229,29 @@ class ConditionHandler {
                     break
             }
         }
+
+        // convert value to specific type
+        def val = (Object) singleTerm.value
+
+        if (singleTerm.containsKey("typeConversion")) {
+            def toType = (String) singleTerm.get("typeConversion")
+            switch (toType.toLowerCase()) {
+                case "todate":
+                    val = ViUtilities.stringToDate(val)
+                    break
+                case "totimestamp":
+                    val = ViUtilities.stringToTimestamp(val)
+                    break
+                default:
+                    break
+            }
+        }
+
         // using new fieldValueCondition
         def newCond = new ExtendedFieldValueCondition(
                 new ConditionField((String) singleTerm.field),
                 compOperator,
-                (Object) singleTerm.value
+                val
         )
         // add new feature to condition, nested field
         if (singleTerm.containsKey('nested')) newCond.setNestedFields(singleTerm.nested as String)

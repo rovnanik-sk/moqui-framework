@@ -20,7 +20,7 @@ class SharepointResponse {
             HashMap location) {
 
         // use existing method and return bytes
-        def b = sendJsonToSharepoint(ec, credentials, location, 'api/v1/sharepoint/fetch-list')
+        def b = sendJsonToSharepoint(ec, credentials, location, 'api/v1/utility/fetch-list')
 
         return (ArrayList) b.jsonObject()
     }
@@ -37,7 +37,7 @@ class SharepointResponse {
             ExecutionContext ec,
             String credentials_keyword,
             HashMap location,
-            String endpoint='api/v1/sharepoint/fetch-bytes',
+            String endpoint='api/v1/utility/fetch-bytes',
             RestClient.Method method = RestClient.Method.POST)
     {
         return genericSendJsonToSharepoint(ec, credentials_keyword, location, endpoint, null, method)

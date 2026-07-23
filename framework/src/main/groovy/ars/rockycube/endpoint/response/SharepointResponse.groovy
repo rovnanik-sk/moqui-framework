@@ -137,7 +137,7 @@ class SharepointResponse {
             if (location) {
                 if (!location.isEmpty()) {
                     location.keySet().each {String it ->
-                        selectedHeaders["ars_loc_${it}".toString().toLowerCase()] = location[it]
+                        selectedHeaders["ars_loc_${it}".toString().toLowerCase()] = location[it]?.toString()
                     }
                 }
             }

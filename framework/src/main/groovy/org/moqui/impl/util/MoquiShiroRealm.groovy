@@ -269,7 +269,13 @@ class MoquiShiroRealm implements Realm, Authorizer {
 
         SaltedAuthenticationInfo info = null
         try {
-            EntityValue newUserAccount = loginPrePassword(eci, username)
+            EntityValue newUserAccount
+            try {
+                newUserAccount = loginPrePassword(eci, username)
+            } catch (AuthenticationException ae) {
+                logger.warn("Moqui realm authentication failed for username [${username}] in loginPrePassword: ${ae.toString()}")
+                throw ae
+            }
             userId = newUserAccount.getString("userId")
 
             // create the salted SimpleAuthenticationInfo object
@@ -283,15 +289,27 @@ class MoquiShiroRealm implements Realm, Authorizer {
                     // if failed on password, increment in new transaction to make sure it sticks
                     ecfi.serviceFacade.sync().name("org.moqui.impl.UserServices.increment#UserAccountFailedLogins")
                             .parameters((Map<String, Object>) [userId:newUserAccount.userId]).requireNewTransaction(true).call()
+                    logger.warn("Moqui realm authentication failed for username [${username}], userId [${userId}]: password did not match (passwordHashType [${newUserAccount.passwordHashType}])")
                     throw new IncorrectCredentialsException(ecfi.resource.expand('Password incorrect for username ${username}','',[username:username]))
                 }
             }
 
             // credentials matched
-            loginPostPassword(eci, newUserAccount, token)
+            try {
+                loginPostPassword(eci, newUserAccount, token)
+            } catch (AuthenticationException ae) {
+                logger.warn("Moqui realm authentication failed for username [${username}], userId [${userId}] in loginPostPassword: ${ae.toString()}")
+                throw ae
+            }
 
             // at this point the user is successfully authenticated
             successful = true
+        } catch (AuthenticationException ae) {
+            // catch-all in case a future code path throws without a more specific log above
+            throw ae
+        } catch (Throwable t) {
+            logger.error("Unexpected error authenticating username [${username}] in MoquiShiroRealm", t)
+            throw t
         } finally {
             boolean saveHistory = true
             if (isForceLogin) {

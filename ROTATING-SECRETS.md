@@ -8,6 +8,32 @@
 
 ---
 
+## At a glance: every secret and how easy it is to rotate
+
+Can a password be changed without a special database step? **Mostly no.** The only changes with no SQL at all are Moqui user passwords (done in the Moqui screen); their salts are renewed with them. The database passwords need one `ALTER ROLE` command. The encryption key is the hardest.
+
+**Ease:** 🟢 easy, 🟡 needs one extra step, 🔴 hard or risky.
+
+| Secret | Where the real value lives | What you must do besides vault and `.env` | Ease |
+|---|---|---|---|
+| **Moqui user passwords** (`john.hardy`, `executor`, staff, ...) | Moqui database, as hash plus per-user salt | Change in the Moqui UI as admin. No SQL. | 🟢 |
+| **Per-user salts** | Same row as the hash | Nothing. Each password change creates a new salt. | 🟢 |
+| `INTEGRATION_MOQUI_USER_PWD` | A Moqui user (default `john.doe`) | Change it in Moqui first, then vault, `.env`, recreate `integration`. The wrong order locks the account. | 🟡 |
+| `entity_ds_password` | PostgreSQL role `moqui` | One `ALTER ROLE`, then `.env`, then recreate Moqui. | 🟡 |
+| `DB_CLOSURE_USER_PWD` | PostgreSQL role `cnt_operator` | One `ALTER ROLE`, then recreate Moqui and `integration`. The install script created this role with a hardcoded password, so the real value may not match `.env`: test the login first. | 🟡 |
+| `POSTGRES_PASSWORD` | PostgreSQL role `postgres` | One `ALTER ROLE`. The image only reads `.env` when the volume is first created. | 🟡 |
+| Login keys / sessions | Moqui database and memory | Optional `DELETE FROM user_login_key` and a Moqui restart. Otherwise keys expire after 6 days. | 🟡 |
+| `JMS_USER_PWD` | PostgreSQL role `jms`, also baked into the jms image | `ALTER ROLE` and a rebuild of the jms image. | 🔴 |
+| `ACTIVEMQ_USER_PWD`, `ACTIVEMQ_OPERATOR_PWD` | Inside the jms image (Artemis, not Moqui itself) | Rebuild the image. The operator one is not passed to the container, and the integration app has a hardcoded `jms_password`. | 🔴 |
+| `entity_ds_crypt_pass` | Not used. The real key is hardcoded in `MoquiProdConf.xml` and the compose file. | Switch the key, then re-enter the encrypted secrets (SMTP password etc.). Changing only the `.env` value makes them unreadable. | 🔴 |
+| `crypt-salt` | Not in `.env` at all; the default `20201202` applies | Part of the same key. Needs a new variable and a config change. | 🔴 |
+
+**Suggested start:** Moqui user passwords first (largest risk: the public password `moqui`; no SQL), then the three Moqui database roles (`moqui`, `cnt_operator`, `postgres`). Leave the jms/Artemis secrets and the crypt key for later; count the encrypted data first (section 7.2), it may show the crypt key is a minor issue.
+
+Details: Part 2 (user passwords), Part 1 (database roles), Part 3 (login keys), Part 4 (crypt key). Jms/Artemis are covered in `ansible-ars/docs/ips-mis-rotate-passwords.md`.
+
+---
+
 ## 0. The short version
 
 Moqui uses four kinds of secrets. They are stored in different places, so each one is changed in a different way. **You cannot change them all by editing one file.**

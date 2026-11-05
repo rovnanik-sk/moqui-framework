@@ -1,7 +1,7 @@
 # Builds a minimal docker image with openjdk and moqui with various volumes for configuration and persisted data outside the container
 # NOTE: add components, build and if needed load data before building a docker image with this
 
-FROM openjdk:17-jdk-alpine
+FROM eclipse-temurin:11-jdk-alpine-3.22
 MAINTAINER Michal Rovnanik <michal@rovnanik.sk>
 
 WORKDIR /opt/moqui

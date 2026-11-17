@@ -11,6 +11,8 @@ ENV PG_LOAD_SERVER=${PG_LOAD_SERVER}
 
 # 2. build application, load data into database
 RUN wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -P /tmp
+# eclipse-temurin (unlike the removed openjdk image) does not contain unzip
+RUN apt-get update && apt-get install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/*
 RUN mkdir /opt/gradle
 RUN unzip -d /opt/gradle /tmp/gradle-${GRADLE_VERSION}-bin.zip
 RUN ls -l /opt/gradle
